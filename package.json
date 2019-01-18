@@ -52,7 +52,14 @@
     "node": ">=8.9"
   },
   "dependencies": {
-    "sha.js": "^2.4.11"
+    "actions-on-google": "^2.5.0",
+    "dialogflow": "^0.7.0",
+    "dialogflow-fulfillment": "^0.6.1",
+    "express": "^4.16.4",
+    "pump": "^3.0.0",
+    "sha.js": "^2.4.11",
+    "through2": "^3.0.0",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "ava": "1.0.0-beta.7",
