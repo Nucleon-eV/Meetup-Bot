@@ -84,6 +84,8 @@ declare module 'dialogflow-fulfillment' {
 
     public parameters: object;
 
+    public readonly requestSource: string;
+
     constructor(options: { request: Request, response: Response } | object);
 
     public clearContext(context: string): WebhookClient;
@@ -108,7 +110,7 @@ declare module 'dialogflow-fulfillment' {
 
     public setFollowupEvent(event: string | object): void;
 
-    public add(responses: RichResponse | string | RichResponse[] | string[]): void;
+    public add(responses: RichResponse | string | RichResponse[] | string[] | DialogflowConversation): void;
 
     private addResponse_(response: RichResponse | string): void;
 

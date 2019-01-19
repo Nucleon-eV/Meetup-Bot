@@ -1,4 +1,6 @@
 import { RxHR } from '@akanass/rx-http-request';
+import { Carousel } from 'actions-on-google';
+import { CarouselOptionItem } from 'actions-on-google/src/service/actionssdk/conversation/helper/option/carousel';
 import { Payload, Text, WebhookClient } from 'dialogflow-fulfillment';
 import { PLATFORMS } from 'dialogflow-fulfillment/src/rich-responses/rich-response';
 import moment from 'moment';
@@ -15,7 +17,11 @@ export class Dialogflow {
 
       // console.log(`Request locale: ${agent.locale}`);
 
-      deIntentMap.set('Welche Termine', this.meetup);
+      if (agent.requestSource === PLATFORMS.ACTIONS_ON_GOOGLE) {
+        deIntentMap.set('Welche Termine', (agentL: WebhookClient) => this.meetup(agentL, "google"));
+      } else {
+        deIntentMap.set('Welche Termine', (agentL: WebhookClient) => this.meetup(agentL, "other"));
+      }
 
       if (agent.locale === 'de') {
         agent.handleRequest(deIntentMap).then(() => {
@@ -30,7 +36,7 @@ export class Dialogflow {
     });
   };
 
-  private readonly meetup = (agent: WebhookClient): Promise<void> => {
+  private readonly meetup = (agent: WebhookClient, platform: string): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
       const community = `OK-Lab-Schleswig-Flensburg`;
       let url: string;
@@ -63,40 +69,74 @@ export class Dialogflow {
               events.push(event);
             });
 
-            const message: string[] = [];
-            if (events.length === 0) {
-              if (endDate.isBefore(moment(), 'day')) {
-                message.push('In dem Zeitraum fanden leider keine Events statt :(');
+            if (platform === "google") {
+              const conv = agent.conv();
+              const message: CarouselOptionItem[] = [];
+              if (events.length === 0) {
+                if (endDate.isBefore(moment(), 'day')) {
+                  message.push({
+                    description: 'In dem Zeitraum fanden leider keine Events statt :(',
+                    title: 'Keine Events',
+                  });
+                } else {
+                  message.push({
+                    description: 'In dem Zeitraum finden leider keine Events statt :(',
+                    title: 'Keine Events',
+                  });
+                }
               } else {
-                message.push('In dem Zeitraum finden leider keine Events statt :(');
-              }
-              message.push('');
-            } else {
-              if (endDate.isBefore(moment(), 'day')) {
-                message.push('Folgende Events fanden statt:');
-              } else {
-                message.push('Folgende Events finden statt:');
-              }
-              message.push('');
+                events.forEach(element => {
+                  const dateTime = moment(element.time);
+                  dateTime.locale('de');
+                  const upperCalendarTime = dateTime.calendar().replace(/^\w/, c => c.toUpperCase());
 
-              events.forEach(element => {
-                const dateTime = moment(element.time);
-                dateTime.locale('de');
-                const upperCalendarTime = dateTime.calendar().replace(/^\w/, c => c.toUpperCase());
-
-                message.push(`- [${element.name}](${element.link}): ${upperCalendarTime}`);
+                  message.push({
+                    description: element.link,
+                    title: `${element.name}: ${upperCalendarTime}`,
+                  });
+                });
+              }
+              const listL = new Carousel({
+                items: message
               });
+              conv.ask(listL);
+              agent.add(conv);
+            } else {
+              const message: string[] = [];
+              if (events.length === 0) {
+                if (endDate.isBefore(moment(), 'day')) {
+                  message.push('In dem Zeitraum fanden leider keine Events statt :(');
+                } else {
+                  message.push('In dem Zeitraum finden leider keine Events statt :(');
+                }
+                message.push('');
+              } else {
+                if (endDate.isBefore(moment(), 'day')) {
+                  message.push('Folgende Events fanden statt:');
+                } else {
+                  message.push('Folgende Events finden statt:');
+                }
+                message.push('');
+
+                events.forEach(element => {
+                  const dateTime = moment(element.time);
+                  dateTime.locale('de');
+                  const upperCalendarTime = dateTime.calendar().replace(/^\w/, c => c.toUpperCase());
+
+                  message.push(`- [${element.name}](${element.link}): ${upperCalendarTime}`);
+                });
+              }
+
+              message.push('');
+              message.push(`Weitere Events findest du hier: https://www.meetup.com/de-DE/${community}/events`);
+              const payloadTg = new Payload(PLATFORMS.TELEGRAM, {
+                parse_mode: 'Markdown',
+                text: message.join('\n')
+              });
+              agent.add(payloadTg);
             }
 
-            message.push('');
-            message.push(`Weitere Events findest du hier: https://www.meetup.com/de-DE/${community}/events`);
-
-            const payloadTg = new Payload(PLATFORMS.TELEGRAM, {
-              parse_mode: 'Markdown',
-              text: message.join('\n')
-            });
-            const payloadNull = new Text(message.join('\n'));
-            agent.add(payloadTg);
+            const payloadNull = new Text("Unsupported Platform");
             agent.add(payloadNull);
             resolve();
           } else {
