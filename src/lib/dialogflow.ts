@@ -8,7 +8,7 @@ import { Event } from './MeetupInterfaces';
 export class Dialogflow {
   public readonly handleIntent = (agent: WebhookClient): Promise<boolean> => {
     return new Promise<boolean>((resolve, reject) => {
-// Run the proper handler based on the matched Dialogflow intent
+
       const deIntentMap = new Map<string, (agent: WebhookClient) => void>();
       deIntentMap.set('Default Welcome Intent', this.welcomeDE);
       deIntentMap.set('Default Fallback Intent', this.fallbackDE);
