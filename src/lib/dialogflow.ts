@@ -1,5 +1,6 @@
 import {RxHR} from "@akanass/rx-http-request";
 import { WebhookClient } from 'dialogflow-fulfillment';
+import { Event } from './MeetupInterfaces';
 
 export class Dialogflow {
   public readonly handleIntent = (agent: WebhookClient):Promise<boolean> => {
@@ -30,11 +31,32 @@ export class Dialogflow {
     return new Promise<void>((resolve, reject) => {
       console.log(agent.parameters['date-time']);
       const community = `OK-Lab-Schleswig-Flensburg`;
-      RxHR.get(`https://api.meetup.com/${community}/events?&sign=true&photo-host=public`).subscribe(
+      RxHR.get(`https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&status=past`).subscribe(
         (data) =>  {
           if (data.response.statusCode === 200) {
-            console.log(data.body); // Show the HTML for the Google homepage.
-            agent.add("Test");
+            const json = JSON.parse(data.body);
+            const events: Event[] = [];
+
+            json.forEach(element => {
+              const event: Event = element as Event;
+              events.push(event)
+            });
+
+            const message: string[] = [];
+            message.push("Folgende Events finden statt:");
+
+            events.forEach(element => {
+              const dateTime = new Date(element.time);
+
+              message.push(`- ${element.name}: ${dateTime.toLocaleDateString()} um ${dateTime.toLocaleTimeString()}`)
+            });
+
+            message.push("");
+            message.push(`Weitere Events findest du hier: https://www.meetup.com/de-DE/${community}/events`);
+
+            console.log(message);
+
+            agent.add(message.join("\n"));
             resolve()
           }
           reject(new Error("Status Code is not 200"))
@@ -53,6 +75,6 @@ export class Dialogflow {
 
   private readonly fallbackDE = (agent: WebhookClient):void => {
     agent.add(`Das habe ich nicht verstanden.`);
-    agent.add(`Entsschuldigung. Kannst du das nochmal sagen?`);
+    agent.add(`Entschuldigung. Kannst du das nochmal sagen?`);
   }
 }
