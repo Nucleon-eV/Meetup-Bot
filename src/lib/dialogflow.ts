@@ -2,6 +2,7 @@ import {RxHR} from "@akanass/rx-http-request";
 import { Payload, Text, WebhookClient } from 'dialogflow-fulfillment';
 import { PLATFORMS } from 'dialogflow-fulfillment/src/rich-responses/rich-response';
 import moment from 'moment';
+import { DateTimeParamters } from './DateTimeParameters';
 import { Event } from './MeetupInterfaces';
 
 export class Dialogflow {
@@ -34,11 +35,28 @@ export class Dialogflow {
       const community = `OK-Lab-Schleswig-Flensburg`;
       console.log(agent.parameters);
       console.log(agent.parameters['date-time']);
-      const startDate = moment(agent.parameters['date-time']['startDate']).startOf('day').toISOString().slice(0, -1);
-      const endDate = moment(agent.parameters['date-time']['endDate']).endOf('day').toISOString().slice(0, -1);
-      console.log(startDate);
-      console.log(endDate);
-      RxHR.get(`https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${startDate}&no_later_than=${endDate}`).subscribe(
+      console.log(agent.parameters['date-time']['date-time']);
+      let url;
+      const time: DateTimeParamters = agent.parameters['date-time']['date-time'] as DateTimeParamters;
+      if (time.startDate !== "" && time.endDate !== "") {
+        const startDate = moment(time.startDate).startOf('day').toISOString().slice(0, -1);
+        const endDate = moment( time.endDate).endOf('day').toISOString().slice(0, -1);
+        console.log(startDate);
+        console.log(endDate);
+
+        url = `https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${startDate}&no_later_than=${endDate}`;
+      } else if (time['date-time'] !== "") {
+        const startDate = moment(time['date-time']).startOf('day').toISOString().slice(0, -1);
+        const endDate = moment( time['date-time']).endOf('day').toISOString().slice(0, -1);
+
+        console.log(startDate);
+        console.log(endDate);
+
+        url = `https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${startDate}&no_later_than=${endDate}`;
+
+      }
+
+      RxHR.get(url).subscribe(
         (data) =>  {
           if (data.response.statusCode === 200) {
             const json = JSON.parse(data.body);
