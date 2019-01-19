@@ -45,13 +45,14 @@ export class Dialogflow {
 
             const message: string[] = [];
             message.push("Folgende Events finden statt:");
+            message.push("");
 
             events.forEach(element => {
               const dateTime = moment(element.time);
               dateTime.locale("de");
               const upperCalendarTime = dateTime.calendar().replace(/^\w/, c => c.toUpperCase());
 
-              message.push(`* ${element.name}: ${upperCalendarTime}`)
+              message.push(`* *${element.name}*: ${upperCalendarTime}`)
             });
 
             message.push("");
