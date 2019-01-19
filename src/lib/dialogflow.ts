@@ -73,18 +73,18 @@ export class Dialogflow {
               const conv = agent.conv();
               const message: CarouselOptionItem[] = [];
               if (events.length === 0) {
+
                 if (endDate.isBefore(moment(), 'day')) {
-                  message.push({
-                    description: 'In dem Zeitraum fanden leider keine Events statt :(',
-                    title: 'Keine Events',
-                  });
+                  conv.close("In dem Zeitraum fanden leider keine Events statt :(");
                 } else {
-                  message.push({
-                    description: 'In dem Zeitraum finden leider keine Events statt :(',
-                    title: 'Keine Events',
-                  });
+                  conv.close("In dem Zeitraum finden leider keine Events statt :(");
                 }
               } else {
+                if (endDate.isBefore(moment(), 'day')) {
+                  conv.ask('Folgende Events fanden statt:');
+                } else {
+                  conv.ask('Folgende Events finden statt:');
+                }
                 events.forEach(element => {
                   const dateTime = moment(element.time);
                   dateTime.locale('de');
@@ -95,11 +95,11 @@ export class Dialogflow {
                     title: `${element.name}: ${upperCalendarTime}`,
                   });
                 });
+                const listL = new Carousel({
+                  items: message
+                });
+                conv.ask(listL);
               }
-              const listL = new Carousel({
-                items: message
-              });
-              conv.ask(listL);
               agent.add(conv);
             } else {
               const message: string[] = [];
