@@ -41,7 +41,7 @@ export class Dialogflow {
         console.log(startDate);
         console.log(endDate);
 
-        url = `https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${startDate}&no_later_than=${endDate}`;
+        url = `https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${startDate}&no_later_than=${endDate}&status=past,upcoming,proposed,suggested`;
       } else if (time['date-time'] !== undefined) {
         const startDate = moment(time['date-time']).startOf('day').toISOString().slice(0, -1);
         const endDate = moment(time['date-time']).endOf('day').toISOString().slice(0, -1);
@@ -49,7 +49,7 @@ export class Dialogflow {
         console.log(startDate);
         console.log(endDate);
 
-        url = `https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${startDate}&no_later_than=${endDate}`;
+        url = `https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${startDate}&no_later_than=${endDate}&status=past,upcoming,proposed,suggested`;
 
       } else {
         reject(new Error('Missing Time data'));
