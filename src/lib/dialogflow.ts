@@ -53,7 +53,7 @@ export class Dialogflow {
               dateTime.locale("de");
               const upperCalendarTime = dateTime.calendar().replace(/^\w/, c => c.toUpperCase());
 
-              message.push(`- *${element.name}*: ${upperCalendarTime}`)
+              message.push(`- *[${element.name}](${element.link})*: ${upperCalendarTime}`)
             });
 
             message.push("");
