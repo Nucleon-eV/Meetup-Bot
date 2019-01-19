@@ -93,11 +93,15 @@ export class Dialogflow {
 
                   message[element.id] = {
                     description: element.link,
-                    // @ts-ignore
-                    optionInfo: {},
                     title: `${element.name}: ${upperCalendarTime}`,
                   };
                 });
+
+                message['more'] = {
+                  description: `Weitere Events findest du hier: https://www.meetup.com/de-DE/${community}/events`,
+                  title: `Weitere Events`,
+                };
+                
                 const listL = new Carousel({
                   items: message
                 });
