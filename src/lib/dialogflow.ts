@@ -13,7 +13,7 @@ export class Dialogflow {
       deIntentMap.set('Default Welcome Intent', this.welcomeDE);
       deIntentMap.set('Default Fallback Intent', this.fallbackDE);
 
-      console.log(`Request locale: ${agent.locale}`);
+      // console.log(`Request locale: ${agent.locale}`);
 
       deIntentMap.set('Welche Termine', this.meetup);
 
@@ -33,27 +33,24 @@ export class Dialogflow {
   private readonly meetup = (agent: WebhookClient): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
       const community = `OK-Lab-Schleswig-Flensburg`;
-      let url;
+      let url: string;
+      let startDate: moment.Moment;
+      let endDate: moment.Moment;
       const time: DateTimeParamters = agent.parameters['date-time'] as DateTimeParamters;
       if (time.startDate !== undefined || time.endDate !== undefined) {
-        const startDate = moment(time.startDate).startOf('day').toISOString().slice(0, -1);
-        const endDate = moment(time.endDate).endOf('day').toISOString().slice(0, -1);
-        console.log(startDate);
-        console.log(endDate);
-
-        url = `https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${startDate}&no_later_than=${endDate}&status=past,upcoming,proposed,suggested`;
+        startDate = moment(time.startDate).startOf('day');
+        endDate = moment(time.endDate).endOf('day');
       } else if (time['date-time'] !== undefined) {
-        const startDate = moment(time['date-time']).startOf('day').toISOString().slice(0, -1);
-        const endDate = moment(time['date-time']).endOf('day').toISOString().slice(0, -1);
-
-        console.log(startDate);
-        console.log(endDate);
-
-        url = `https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${startDate}&no_later_than=${endDate}&status=past,upcoming,proposed,suggested`;
-
+        startDate = moment(time['date-time']).startOf('day');
+        endDate = moment(time['date-time']).endOf('day');
       } else {
         reject(new Error('Missing Time data'));
       }
+
+      const startDateString = startDate.toISOString().slice(0, -1);
+      const endDateString = endDate.toISOString().slice(0, -1);
+
+      url = `https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${startDateString}&no_later_than=${endDateString}&status=past,upcoming,proposed,suggested`;
 
       RxHR.get(url).subscribe(
         (data) => {
@@ -68,10 +65,18 @@ export class Dialogflow {
 
             const message: string[] = [];
             if (events.length === 0) {
-              message.push('In dem Zeitraum finden leider keine Events statt :(');
+              if (endDate.isBefore(moment(), 'day')) {
+                message.push('In dem Zeitraum fanden leider keine Events statt :(');
+              } else {
+                message.push('In dem Zeitraum finden leider keine Events statt :(');
+              }
               message.push('');
             } else {
-              message.push('Folgende Events finden statt:');
+              if (endDate.isBefore(moment(), 'day')) {
+                message.push('Folgende Events fanden statt:');
+              } else {
+                message.push('Folgende Events finden statt:');
+              }
               message.push('');
 
               events.forEach(element => {
