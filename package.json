@@ -59,6 +59,7 @@
     "dialogflow-fulfillment": "^0.6.1",
     "express": "^4.16.4",
     "helmet": "^3.15.0",
+    "moment": "^2.23.0",
     "pump": "^3.0.0",
     "rxjs": "^6.3.3",
     "supertest": "^3.4.1",

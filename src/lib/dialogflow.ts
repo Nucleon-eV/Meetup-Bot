@@ -1,5 +1,6 @@
 import {RxHR} from "@akanass/rx-http-request";
 import { WebhookClient } from 'dialogflow-fulfillment';
+import moment from 'moment';
 import { Event } from './MeetupInterfaces';
 
 export class Dialogflow {
@@ -46,9 +47,11 @@ export class Dialogflow {
             message.push("Folgende Events finden statt:");
 
             events.forEach(element => {
-              const dateTime = new Date(element.time);
+              const dateTime = moment(element.time);
+              dateTime.locale("de");
+              const upperCalendarTime = dateTime.calendar().replace(/^\w/, c => c.toUpperCase());
 
-              message.push(`- ${element.name}: ${dateTime.toLocaleDateString()} um ${dateTime.toLocaleTimeString()}`)
+              message.push(`* ${element.name}: ${upperCalendarTime}`)
             });
 
             message.push("");
