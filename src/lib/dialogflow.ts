@@ -32,6 +32,7 @@ export class Dialogflow {
   private readonly meetup = (agent: WebhookClient):Promise<void> => {
     return new Promise<void>((resolve, reject) => {
       const community = `OK-Lab-Schleswig-Flensburg`;
+      console.log(agent.parameters);
       console.log(agent.parameters['date-time']);
       const startDate = moment(agent.parameters['date-time']['startDate']).startOf('day').toISOString().slice(0, -1);
       const endDate = moment(agent.parameters['date-time']['endDate']).endOf('day').toISOString().slice(0, -1);
