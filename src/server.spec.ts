@@ -24,39 +24,7 @@ test("ask for tomorrows meetups", async t => {
   t.plan(1);
   const res = await request(t.context['server'].server)
     .post('/')
-    .send({
-      "originalDetectIntentRequest": {},
-      "queryResult": {
-        "allRequiredParamsPresent": true,
-        "diagnosticInfo": {
-          "end_conversation": true
-        },
-        "fulfillmentMessages": [
-          {
-            "text": {
-              "text": [
-                "Entschuldigung. Ich habe gerade nichts gefunden."
-              ]
-            }
-          }
-        ],
-        "fulfillmentText": "Entschuldigung. Ich habe gerade nichts gefunden.",
-        "intent": {
-          "displayName": "Welche Termine",
-          "endInteraction": true,
-          "name": "projects/nucleon-ev-events/agent/intents/aa6cab84-298b-40d1-bdf7-18e53f810a0a",
-        },
-        "intentDetectionConfidence": 1,
-        "languageCode": "de",
-        "parameters": {
-          "date": "2019-01-20T12:00:00+01:00",
-          "date-period": "",
-        },
-        "queryText": "Was passiert morgen?"
-      },
-      "responseId": "822011bf-c32b-467a-bfce-02aa2975de09",
-      "session": "projects/nucleon-ev-events/agent/sessions/88d13aa8-2999-4f71-b233-39cbf3a824a0"
-    });
+    .send({"responseId":"d7357d38-33d4-4fec-9333-5e494841a4dd","queryResult":{"queryText":"was ist nächste woche?","parameters":{"date-time":{"startDate":"2019-01-21T12:00:00+01:00","endDate":"2019-01-27T12:00:00+01:00"}},"allRequiredParamsPresent":true,"fulfillmentText":"Entschuldigung. Ich habe gerade nichts gefunden.","fulfillmentMessages":[{"text":{"text":["Entschuldigung. Ich habe gerade nichts gefunden."]}}],"intent":{"name":"projects/nucleon-ev-events/agent/intents/aa6cab84-298b-40d1-bdf7-18e53f810a0a","displayName":"Welche Termine","endInteraction":true},"intentDetectionConfidence":0.97,"diagnosticInfo":{"end_conversation":true},"languageCode":"de"},"originalDetectIntentRequest":{"payload":{}},"session":"projects/nucleon-ev-events/agent/sessions/997a4e5b-45bc-2847-a722-b146e19e31dc"});
 
   t.is(res.status, 200);
 });
