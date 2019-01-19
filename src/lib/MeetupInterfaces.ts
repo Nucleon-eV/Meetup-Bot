@@ -18,6 +18,7 @@ export interface Event {
   how_to_find_us: string;
   visibility: string;
 }
+
 export interface Venue {
   id: number;
   name: string;
@@ -29,6 +30,7 @@ export interface Venue {
   country: string;
   localized_country_name: string;
 }
+
 export interface Group {
   created: number;
   name: string;

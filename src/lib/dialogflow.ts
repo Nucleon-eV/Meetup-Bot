@@ -1,4 +1,4 @@
-import {RxHR} from "@akanass/rx-http-request";
+import { RxHR } from '@akanass/rx-http-request';
 import { Payload, Text, WebhookClient } from 'dialogflow-fulfillment';
 import { PLATFORMS } from 'dialogflow-fulfillment/src/rich-responses/rich-response';
 import moment from 'moment';
@@ -6,119 +6,108 @@ import { DateTimeParamters } from './DateTimeParameters';
 import { Event } from './MeetupInterfaces';
 
 export class Dialogflow {
-  public readonly handleIntent = (agent: WebhookClient):Promise<boolean> => {
+  public readonly handleIntent = (agent: WebhookClient): Promise<boolean> => {
     return new Promise<boolean>((resolve, reject) => {
 // Run the proper handler based on the matched Dialogflow intent
-      const deIntentMap = new Map<string, (agent: WebhookClient)=>void>();
+      const deIntentMap = new Map<string, (agent: WebhookClient) => void>();
       deIntentMap.set('Default Welcome Intent', this.welcomeDE);
       deIntentMap.set('Default Fallback Intent', this.fallbackDE);
 
       console.log(`Request locale: ${agent.locale}`);
 
-      deIntentMap.set("Welche Termine", this.meetup);
+      deIntentMap.set('Welche Termine', this.meetup);
 
       if (agent.locale === 'de') {
         agent.handleRequest(deIntentMap).then(() => {
-          resolve(true)
+          resolve(true);
         })
-        .catch(e => {
-          reject(e)
-        })
+          .catch(e => {
+            reject(e);
+          });
       } else {
-        resolve(false)
+        resolve(false);
       }
     });
   };
 
-  private readonly meetup = (agent: WebhookClient):Promise<void> => {
+  private readonly meetup = (agent: WebhookClient): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
       const community = `OK-Lab-Schleswig-Flensburg`;
-      console.log(agent.parameters);
-      console.log(agent.parameters['date-time']);
-      console.log(agent.parameters['date-time']['date-time']);
       let url;
-      const time: DateTimeParamters = agent.parameters['date-time']['date-time'] as DateTimeParamters;
-      console.log(time);
-      if (time.startDate !== null && time.endDate !== null) {
-        console.log("nicht hier");
+      const time: DateTimeParamters = agent.parameters['date-time'] as DateTimeParamters;
+      if (time.startDate !== undefined || time.endDate !== undefined) {
         const startDate = moment(time.startDate).startOf('day').toISOString().slice(0, -1);
-        const endDate = moment( time.endDate).endOf('day').toISOString().slice(0, -1);
-        console.log(startDate);
-        console.log(endDate);
+        const endDate = moment(time.endDate).endOf('day').toISOString().slice(0, -1);
 
         url = `https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${startDate}&no_later_than=${endDate}`;
-      } else if (time['date-time'] !== null) {
-        console.log("hier");
+      } else if (time['date-time'] !== undefined) {
         const startDate = moment(time['date-time']).startOf('day').toISOString().slice(0, -1);
-        const endDate = moment( time['date-time']).endOf('day').toISOString().slice(0, -1);
-
-        console.log(startDate);
-        console.log(endDate);
+        const endDate = moment(time['date-time']).endOf('day').toISOString().slice(0, -1);
 
         url = `https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${startDate}&no_later_than=${endDate}`;
 
       } else {
-        reject(new Error("Missing Time data"))
+        reject(new Error('Missing Time data'));
       }
 
       RxHR.get(url).subscribe(
-        (data) =>  {
+        (data) => {
           if (data.response.statusCode === 200) {
             const json = JSON.parse(data.body);
             const events: Event[] = [];
 
             json.forEach(element => {
               const event: Event = element as Event;
-              events.push(event)
+              events.push(event);
             });
 
             const message: string[] = [];
             if (events.length === 0) {
-              message.push("In dem Zeitraum finden leider keine Events statt :(");
-              message.push("");
+              message.push('In dem Zeitraum finden leider keine Events statt :(');
+              message.push('');
             } else {
-              message.push("Folgende Events finden statt:");
-              message.push("");
+              message.push('Folgende Events finden statt:');
+              message.push('');
 
               events.forEach(element => {
                 const dateTime = moment(element.time);
-                dateTime.locale("de");
+                dateTime.locale('de');
                 const upperCalendarTime = dateTime.calendar().replace(/^\w/, c => c.toUpperCase());
 
-                message.push(`- [${element.name}](${element.link}): ${upperCalendarTime}`)
+                message.push(`- [${element.name}](${element.link}): ${upperCalendarTime}`);
               });
             }
 
-            message.push("");
+            message.push('');
             message.push(`Weitere Events findest du hier: https://www.meetup.com/de-DE/${community}/events`);
 
             const payloadTg = new Payload(PLATFORMS.TELEGRAM, {
-              parse_mode: "Markdown",
-              text: message.join("\n"),
+              parse_mode: 'Markdown',
+              text: message.join('\n')
             });
-            const payloadNull = new Text(message.join("\n"));
+            const payloadNull = new Text(message.join('\n'));
             agent.add(payloadTg);
             agent.add(payloadNull);
-            resolve()
+            resolve();
           } else {
-            console.log(data.body)
+            console.log(data.body);
           }
-          reject(new Error("Status Code is not 200"))
+          reject(new Error('Status Code is not 200'));
         },
         (err) => {
           console.error(err);
-          reject(err)
+          reject(err);
         }
       );
     });
   };
 
-  private readonly welcomeDE = (agent: WebhookClient):void => {
+  private readonly welcomeDE = (agent: WebhookClient): void => {
     agent.add(`Guten Tag!`);
   };
 
-  private readonly fallbackDE = (agent: WebhookClient):void => {
+  private readonly fallbackDE = (agent: WebhookClient): void => {
     agent.add(`Das habe ich nicht verstanden.`);
     agent.add(`Entschuldigung. Kannst du das nochmal sagen?`);
-  }
+  };
 }
