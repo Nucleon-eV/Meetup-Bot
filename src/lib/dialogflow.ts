@@ -1,5 +1,6 @@
 import {RxHR} from "@akanass/rx-http-request";
-import { WebhookClient } from 'dialogflow-fulfillment';
+import { Payload, Text, WebhookClient } from 'dialogflow-fulfillment';
+import { PLATFORMS } from 'dialogflow-fulfillment/src/rich-responses/rich-response';
 import moment from 'moment';
 import { Event } from './MeetupInterfaces';
 
@@ -52,15 +53,19 @@ export class Dialogflow {
               dateTime.locale("de");
               const upperCalendarTime = dateTime.calendar().replace(/^\w/, c => c.toUpperCase());
 
-              message.push(`* *${element.name}*: ${upperCalendarTime}`)
+              message.push(`- *${element.name}*: ${upperCalendarTime}`)
             });
 
             message.push("");
             message.push(`Weitere Events findest du hier: https://www.meetup.com/de-DE/${community}/events`);
 
-            console.log(message);
-
-            agent.add(message.join("\n"));
+            const payloadTg = new Payload(PLATFORMS.TELEGRAM, {
+              parse_mode: "Markdown",
+              text: message.join("\n"),
+            });
+            const payloadNull = new Text(message.join("\n"));
+            agent.add(payloadTg);
+            agent.add(payloadNull);
             resolve()
           }
           reject(new Error("Status Code is not 200"))

@@ -6,6 +6,9 @@
     // waiting on https://github.com/palantir/tslint/pull/3708
     "no-implicit-dependencies": [true, "dev"],
     "no-string-literal": false,
+    "no-namespace": false,
+    "no-submodule-imports": false,
+    "max-classes-per-file": 10,
 
     /* tslint-immutable rules */
     // Recommended built-in rules
