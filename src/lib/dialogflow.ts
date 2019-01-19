@@ -98,7 +98,7 @@ export class Dialogflow {
                 const listL = new Carousel({
                   items: message
                 });
-                conv.ask(listL);
+                conv.close(listL);
               }
               agent.add(conv);
             } else {
