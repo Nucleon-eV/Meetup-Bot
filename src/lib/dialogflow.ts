@@ -31,9 +31,10 @@ export class Dialogflow {
 
   private readonly meetup = (agent: WebhookClient):Promise<void> => {
     return new Promise<void>((resolve, reject) => {
-      console.log(agent.parameters['date-time']);
       const community = `OK-Lab-Schleswig-Flensburg`;
-      RxHR.get(`https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&status=past`).subscribe(
+      const startDate = moment(agent.parameters['date-time']['startDate']).toISOString().slice(0, -1);
+      const endDate = moment(agent.parameters['date-time']['endDate']).toISOString().slice(0, -1);
+      RxHR.get(`https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${startDate}&no_later_than=${endDate}`).subscribe(
         (data) =>  {
           if (data.response.statusCode === 200) {
             const json = JSON.parse(data.body);
@@ -45,16 +46,21 @@ export class Dialogflow {
             });
 
             const message: string[] = [];
-            message.push("Folgende Events finden statt:");
-            message.push("");
+            if (events.length === 0) {
+              message.push("In dem Zeitraum finden leider keine Events statt :(");
+              message.push("");
+            } else {
+              message.push("Folgende Events finden statt:");
+              message.push("");
 
-            events.forEach(element => {
-              const dateTime = moment(element.time);
-              dateTime.locale("de");
-              const upperCalendarTime = dateTime.calendar().replace(/^\w/, c => c.toUpperCase());
+              events.forEach(element => {
+                const dateTime = moment(element.time);
+                dateTime.locale("de");
+                const upperCalendarTime = dateTime.calendar().replace(/^\w/, c => c.toUpperCase());
 
-              message.push(`- [${element.name}](${element.link}): ${upperCalendarTime}`)
-            });
+                message.push(`- [${element.name}](${element.link}): ${upperCalendarTime}`)
+              });
+            }
 
             message.push("");
             message.push(`Weitere Events findest du hier: https://www.meetup.com/de-DE/${community}/events`);
@@ -67,6 +73,8 @@ export class Dialogflow {
             agent.add(payloadTg);
             agent.add(payloadNull);
             resolve()
+          } else {
+            console.log(data.body)
           }
           reject(new Error("Status Code is not 200"))
         },
