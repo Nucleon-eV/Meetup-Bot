@@ -32,8 +32,8 @@ export class Dialogflow {
   private readonly meetup = (agent: WebhookClient):Promise<void> => {
     return new Promise<void>((resolve, reject) => {
       const community = `OK-Lab-Schleswig-Flensburg`;
-      const startDate = moment(agent.parameters['date-time']['startDate']).toISOString().slice(0, -1);
-      const endDate = moment(agent.parameters['date-time']['endDate']).toISOString().slice(0, -1);
+      const startDate = moment(agent.parameters['date-time']['startDate']).startOf('day').toISOString().slice(0, -1);
+      const endDate = moment(agent.parameters['date-time']['endDate']).endOf('day').toISOString().slice(0, -1);
       console.log(startDate);
       console.log(endDate);
       RxHR.get(`https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${startDate}&no_later_than=${endDate}`).subscribe(
