@@ -38,7 +38,9 @@ export class Dialogflow {
       console.log(agent.parameters['date-time']['date-time']);
       let url;
       const time: DateTimeParamters = agent.parameters['date-time']['date-time'] as DateTimeParamters;
+      console.log(time);
       if (time.startDate !== null && time.endDate !== null) {
+        console.log("nicht hier");
         const startDate = moment(time.startDate).startOf('day').toISOString().slice(0, -1);
         const endDate = moment( time.endDate).endOf('day').toISOString().slice(0, -1);
         console.log(startDate);
@@ -46,6 +48,7 @@ export class Dialogflow {
 
         url = `https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${startDate}&no_later_than=${endDate}`;
       } else if (time['date-time'] !== null) {
+        console.log("hier");
         const startDate = moment(time['date-time']).startOf('day').toISOString().slice(0, -1);
         const endDate = moment( time['date-time']).endOf('day').toISOString().slice(0, -1);
 
