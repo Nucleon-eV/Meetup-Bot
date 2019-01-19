@@ -1,6 +1,7 @@
 import { RxHR } from '@akanass/rx-http-request';
 import { Carousel } from 'actions-on-google';
 import { CarouselOptionItem } from 'actions-on-google/src/service/actionssdk/conversation/helper/option/carousel';
+import { OptionItems } from 'actions-on-google/src/service/actionssdk/conversation/helper/option/option';
 import { Payload, Text, WebhookClient } from 'dialogflow-fulfillment';
 import { PLATFORMS } from 'dialogflow-fulfillment/src/rich-responses/rich-response';
 import moment from 'moment';
@@ -71,7 +72,7 @@ export class Dialogflow {
 
             if (platform === "google") {
               const conv = agent.conv();
-              const message: CarouselOptionItem[] = [];
+              const message:  OptionItems<CarouselOptionItem> = {};
               if (events.length === 0) {
 
                 if (endDate.isBefore(moment(), 'day')) {
@@ -90,10 +91,12 @@ export class Dialogflow {
                   dateTime.locale('de');
                   const upperCalendarTime = dateTime.calendar().replace(/^\w/, c => c.toUpperCase());
 
-                  message.push({
+                  message[element.id] = {
                     description: element.link,
+                    // @ts-ignore
+                    optionInfo: {},
                     title: `${element.name}: ${upperCalendarTime}`,
-                  });
+                  };
                 });
                 const listL = new Carousel({
                   items: message
