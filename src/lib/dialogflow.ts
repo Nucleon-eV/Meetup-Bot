@@ -1,8 +1,15 @@
 import { WebhookClient } from 'dialogflow-fulfillment';
 import { PLATFORMS } from 'dialogflow-fulfillment/src/rich-responses/rich-response';
+import { Request } from 'express';
 import MeetupIntent from './MeetupIntent';
 
 export default class Dialogflow {
+  private readonly request: Request;
+
+  constructor(req: Request) {
+    this.request = req;
+  }
+
   public readonly handleIntent = (agent: WebhookClient): Promise<boolean> => {
     return new Promise<boolean>((resolve, reject) => {
 
@@ -13,12 +20,14 @@ export default class Dialogflow {
       // console.log(`Request locale: ${agent.locale}`);
 
       if (agent.requestSource === PLATFORMS.ACTIONS_ON_GOOGLE) {
-        deIntentMap.set('Welche Termine', (agentL: WebhookClient):Promise<void> => new MeetupIntent(agentL).handleAssistant());
+        deIntentMap.set('Welche Termine', (agentL: WebhookClient): Promise<void> => new MeetupIntent(agentL, this.request).handleAssistant());
       } else {
-        deIntentMap.set('Welche Termine', (agentL: WebhookClient):Promise<void> => new MeetupIntent(agentL).handleAny());
+        deIntentMap.set('Welche Termine', (agentL: WebhookClient): Promise<void> => new MeetupIntent(agentL, this.request).handleAny());
       }
 
       if (agent.locale === 'de') {
+        // @ts-ignore
+        this.request.setLocale('de');
         agent.handleRequest(deIntentMap).then(() => {
           resolve(true);
         })

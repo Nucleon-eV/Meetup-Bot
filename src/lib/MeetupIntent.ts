@@ -2,6 +2,7 @@ import { RxHR, RxHttpRequestResponse } from '@akanass/rx-http-request';
 import { BrowseCarousel, BrowseCarouselItem, DialogflowConversation } from 'actions-on-google';
 import { Payload, Text, WebhookClient } from 'dialogflow-fulfillment';
 import { PLATFORMS } from 'dialogflow-fulfillment/src/rich-responses/rich-response';
+import { Request } from 'express';
 import moment from 'moment';
 import { Observable } from 'rxjs';
 import { concatMap, flatMap } from 'rxjs/operators';
@@ -15,10 +16,12 @@ export default class MeetupIntent {
   private startDateString: string;
   private endDateString: string;
   private readonly community = `OK-Lab-Schleswig-Flensburg`;
+  private readonly request: Request;
 
 
-  constructor(agent: WebhookClient) {
+  constructor(agent: WebhookClient, req: Request) {
     this.agent = agent;
+    this.request = req;
   }
 
   public readonly parseTime = (): Observable<string> => {
@@ -57,15 +60,19 @@ export default class MeetupIntent {
           if (data.length === 0) {
 
             if (this.endDate.isBefore(moment(), 'day')) {
-              conv.close('In dem Zeitraum fanden leider keine Events statt :(');
+              // @ts-ignore
+              conv.close(this.request.gettext('No Events happened in this time-period :('));
             } else {
-              conv.close('In dem Zeitraum finden leider keine Events statt :(');
+              // @ts-ignore
+              conv.close(this.request.gettext('No Events happen in this time-period :('));
             }
           } else {
             if (this.endDate.isBefore(moment(), 'day')) {
-              conv.ask('Folgende Events fanden statt:');
+              // @ts-ignore
+              conv.ask(this.request.gettext('The following events happened:'));
             } else {
-              conv.ask('Folgende Events finden statt:');
+              // @ts-ignore
+              conv.ask(this.request.gettext('The following events happen:'));
             }
             data.forEach(element => {
               const dateTime = moment(element.time);
@@ -80,7 +87,8 @@ export default class MeetupIntent {
             });
 
             message.push(new BrowseCarouselItem({
-              title: `Weitere Events`,
+              // @ts-ignore
+              title: this.request.gettext(`More Events`),
               url: `https://www.meetup.com/de-DE/${this.community}/events`
             }));
 

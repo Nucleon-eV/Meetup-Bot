@@ -1,0 +1,19 @@
+{
+  "js": {
+    "parsers": [
+      {
+        "expression": "[this].request.gettext",
+        "arguments": {
+          "text": 0
+        }
+      }
+    ],
+    "glob": {
+      "pattern": "src/**/*.ts",
+      "options": {
+        "ignore": "src/**/*.spec.ts"
+      }
+    }
+  },
+  "output": "src/locale/templates/LC_MESSAGES/messages.pot"
+}
