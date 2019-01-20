@@ -58,7 +58,6 @@ export default class MeetupIntent {
         (data: Event[]) => {
           const message: BrowseCarouselItem[] = [];
           if (data.length === 0) {
-
             if (this.endDate.isBefore(moment(), 'day')) {
               // @ts-ignore
               conv.close(this.request.gettext('No Events happened in this time-period :('));
@@ -98,6 +97,7 @@ export default class MeetupIntent {
             conv.ask(listL);
           }
           this.agent.add(conv);
+          resolve()
         },
         error => {
           console.error(error);
