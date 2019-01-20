@@ -52,6 +52,7 @@ export class Dialogflow {
           if (argument["name"] === "OPTION") {
             this.events.forEach(event => {
               if (event.id === argument["textValue"]) {
+                conv.close(`Link zum Event: ${event.link}`);
                 conv.close(new LinkOutSuggestion({
                   name: event.name,
                   url: event.link,
