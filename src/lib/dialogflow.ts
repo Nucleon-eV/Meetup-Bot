@@ -44,7 +44,6 @@ export class Dialogflow {
     return new Promise<void>((resolve) => {
       const conv = agent.conv();
 
-      console.log(JSON.stringify(agent.originalRequest));
       const inputs = agent.originalRequest['payload']['inputs'] as object[];
       inputs.forEach(element => {
         const args = element["arguments"] as object[];
@@ -52,7 +51,7 @@ export class Dialogflow {
           if (argument["name"] === "OPTION") {
             this.events.forEach(event => {
               if (event.id === argument["textValue"]) {
-                conv.close(`Link zum Event: ${event.link}`);
+                conv.ask(`Link zum Event: ${event.link}`);
                 conv.close(new LinkOutSuggestion({
                   name: event.name,
                   url: event.link,
