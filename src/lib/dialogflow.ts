@@ -1,14 +1,8 @@
-import { RxHR } from '@akanass/rx-http-request';
-import { BrowseCarousel, BrowseCarouselItem } from 'actions-on-google';
-import { Payload, Text, WebhookClient } from 'dialogflow-fulfillment';
+import { WebhookClient } from 'dialogflow-fulfillment';
 import { PLATFORMS } from 'dialogflow-fulfillment/src/rich-responses/rich-response';
-import moment from 'moment';
-import { DateTimeParamters } from './DateTimeParameters';
-import { Event } from './MeetupInterfaces';
+import MeetupIntent from './MeetupIntent';
 
-export class Dialogflow {
-  private readonly events: Event[] = [];
-
+export default class Dialogflow {
   public readonly handleIntent = (agent: WebhookClient): Promise<boolean> => {
     return new Promise<boolean>((resolve, reject) => {
 
@@ -19,9 +13,9 @@ export class Dialogflow {
       // console.log(`Request locale: ${agent.locale}`);
 
       if (agent.requestSource === PLATFORMS.ACTIONS_ON_GOOGLE) {
-        deIntentMap.set('Welche Termine', (agentL: WebhookClient) => this.meetup(agentL, 'google'));
+        deIntentMap.set('Welche Termine', (agentL: WebhookClient):Promise<void> => new MeetupIntent(agentL).handleAssistant());
       } else {
-        deIntentMap.set('Welche Termine', (agentL: WebhookClient) => this.meetup(agentL, 'other'));
+        deIntentMap.set('Welche Termine', (agentL: WebhookClient):Promise<void> => new MeetupIntent(agentL).handleAny());
       }
 
       if (agent.locale === 'de') {
@@ -34,137 +28,6 @@ export class Dialogflow {
       } else {
         resolve(false);
       }
-    });
-  };
-
-  private readonly meetup = (agent: WebhookClient, platform: string): Promise<void> => {
-    return new Promise<void>((resolve, reject) => {
-      const community = `OK-Lab-Schleswig-Flensburg`;
-      let url: string;
-      let startDate: moment.Moment;
-      let endDate: moment.Moment;
-      const time: DateTimeParamters = agent.parameters['date-time'] as DateTimeParamters;
-      if (time.startDate !== undefined || time.endDate !== undefined) {
-        startDate = moment(time.startDate).startOf('day');
-        endDate = moment(time.endDate).endOf('day');
-      } else if (time['date-time'] !== undefined) {
-        startDate = moment(time['date-time']).startOf('day');
-        endDate = moment(time['date-time']).endOf('day');
-      } else {
-        reject(new Error('Missing Time data'));
-      }
-
-      const startDateString = startDate.toISOString().slice(0, -1);
-      const endDateString = endDate.toISOString().slice(0, -1);
-
-      url = `https://api.meetup.com/${community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${startDateString}&no_later_than=${endDateString}&status=past,upcoming,proposed,suggested`;
-
-      RxHR.get(url).subscribe(
-        (data) => {
-          if (data.response.statusCode === 200) {
-            const json = JSON.parse(data.body);
-
-            json.forEach(element => {
-              const event: Event = element as Event;
-              this.events.push(event);
-            });
-
-            if (platform === 'google') {
-              const conv = agent.conv();
-              if (!conv.surface.capabilities.has('actions.capability.SCREEN_OUTPUT')) {
-                conv.ask('Entschuldigung, versuche dies auf einem Bildschirm Gerät oder ' +
-                  'nutze die Handy Oberfläche im Simulator');
-                resolve()
-              }
-              if (!conv.surface.capabilities.has('actions.capability.WEB_BROWSER')) {
-                conv.ask('Entschuldigung, versuche dies auf einem Gerät mit Browser');
-                resolve()
-              }
-              const message: BrowseCarouselItem[] = [];
-              if (this.events.length === 0) {
-
-                if (endDate.isBefore(moment(), 'day')) {
-                  conv.close('In dem Zeitraum fanden leider keine Events statt :(');
-                } else {
-                  conv.close('In dem Zeitraum finden leider keine Events statt :(');
-                }
-              } else {
-                if (endDate.isBefore(moment(), 'day')) {
-                  conv.ask('Folgende Events fanden statt:');
-                } else {
-                  conv.ask('Folgende Events finden statt:');
-                }
-                this.events.forEach(element => {
-                  const dateTime = moment(element.time);
-                  dateTime.locale('de');
-                  const upperCalendarTime = dateTime.calendar().replace(/^\w/, c => c.toUpperCase());
-
-                  message.push(new BrowseCarouselItem({
-                    description: upperCalendarTime,
-                    title: `${element.name}`,
-                    url: element.link
-                  }));
-                });
-
-                message.push(new BrowseCarouselItem({
-                  title: `Weitere Events`,
-                  url: `https://www.meetup.com/de-DE/${community}/events`
-                }));
-
-                const listL = new BrowseCarousel({
-                  items: message
-                });
-                conv.ask(listL);
-              }
-              agent.add(conv);
-            } else {
-              const message: string[] = [];
-              if (this.events.length === 0) {
-                if (endDate.isBefore(moment(), 'day')) {
-                  message.push('In dem Zeitraum fanden leider keine Events statt :(');
-                } else {
-                  message.push('In dem Zeitraum finden leider keine Events statt :(');
-                }
-                message.push('');
-              } else {
-                if (endDate.isBefore(moment(), 'day')) {
-                  message.push('Folgende Events fanden statt:');
-                } else {
-                  message.push('Folgende Events finden statt:');
-                }
-                message.push('');
-
-                this.events.forEach(element => {
-                  const dateTime = moment(element.time);
-                  dateTime.locale('de');
-                  const upperCalendarTime = dateTime.calendar().replace(/^\w/, c => c.toUpperCase());
-
-                  message.push(`- [${element.name}](${element.link}): ${upperCalendarTime}`);
-                });
-              }
-
-              message.push('');
-              message.push(`Weitere Events findest du hier: https://www.meetup.com/de-DE/${community}/events`);
-              const payloadTg = new Payload(PLATFORMS.TELEGRAM, {
-                parse_mode: 'Markdown',
-                text: message.join('\n')
-              });
-              agent.add(payloadTg);
-            }
-
-            const payloadNull = new Text('Unsupported Platform');
-            agent.add(payloadNull);
-            resolve();
-          } else {
-            console.log(data.body);
-          }
-          reject(new Error('Status Code is not 200'));
-        },
-        (err) => {
-          console.error(err);
-          reject(err);
-        }
-      );
     });
   };
 

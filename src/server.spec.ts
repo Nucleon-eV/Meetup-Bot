@@ -1,6 +1,6 @@
 import test from 'ava';
 import request from 'supertest';
-import { Server } from './server';
+import Server from './server';
 
 test.beforeEach(t => {
   t.context['server'] = new Server(0);

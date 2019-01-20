@@ -3,11 +3,11 @@ import { WebhookClient } from 'dialogflow-fulfillment';
 import express from 'express';
 import helmet from 'helmet';
 import * as http from 'http';
-import { Dialogflow } from './lib/dialogflow';
+import Dialogflow from './lib/dialogflow';
 
 const app = express();
 
-export class Server {
+export default class Server {
   public server: http.Server;
   private readonly port: number;
 
