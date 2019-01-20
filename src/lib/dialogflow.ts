@@ -1,7 +1,5 @@
 import { RxHR } from '@akanass/rx-http-request';
-import { Carousel, LinkOutSuggestion } from 'actions-on-google';
-import { CarouselOptionItem } from 'actions-on-google/src/service/actionssdk/conversation/helper/option/carousel';
-import { OptionItems } from 'actions-on-google/src/service/actionssdk/conversation/helper/option/option';
+import { BrowseCarousel, BrowseCarouselItem } from 'actions-on-google';
 import { Payload, Text, WebhookClient } from 'dialogflow-fulfillment';
 import { PLATFORMS } from 'dialogflow-fulfillment/src/rich-responses/rich-response';
 import moment from 'moment';
@@ -22,7 +20,6 @@ export class Dialogflow {
 
       if (agent.requestSource === PLATFORMS.ACTIONS_ON_GOOGLE) {
         deIntentMap.set('Welche Termine', (agentL: WebhookClient) => this.meetup(agentL, 'google'));
-        deIntentMap.set('Selected', this.selected);
       } else {
         deIntentMap.set('Welche Termine', (agentL: WebhookClient) => this.meetup(agentL, 'other'));
       }
@@ -37,34 +34,6 @@ export class Dialogflow {
       } else {
         resolve(false);
       }
-    });
-  };
-
-  private readonly selected = (agent: WebhookClient): Promise<void> => {
-    return new Promise<void>((resolve) => {
-      const conv = agent.conv();
-
-      const inputs = agent.originalRequest['payload']['inputs'] as object[];
-      inputs.forEach(element => {
-        const args = element["arguments"] as object[];
-        args.forEach(argument => {
-          if (argument["name"] === "OPTION") {
-            this.events.forEach(event => {
-              if (event.id === argument["textValue"]) {
-                conv.ask(`Link zum Event: ${event.link}`);
-                conv.close(new LinkOutSuggestion({
-                  name: event.name,
-                  url: event.link,
-                }))
-              }
-            })
-          }
-        });
-      });
-
-
-      agent.add(conv);
-      resolve();
     });
   };
 
@@ -102,7 +71,7 @@ export class Dialogflow {
 
             if (platform === 'google') {
               const conv = agent.conv();
-              const message: OptionItems<CarouselOptionItem> = {};
+              const message: BrowseCarouselItem[] = [];
               if (this.events.length === 0) {
 
                 if (endDate.isBefore(moment(), 'day')) {
@@ -121,18 +90,19 @@ export class Dialogflow {
                   dateTime.locale('de');
                   const upperCalendarTime = dateTime.calendar().replace(/^\w/, c => c.toUpperCase());
 
-                  message[element.id] = {
-                    description: element.link,
-                    title: `${element.name}: ${upperCalendarTime}`
-                  };
+                  message.push(new BrowseCarouselItem({
+                    description: upperCalendarTime,
+                    title: `${element.name}`,
+                    url: element.link
+                  }));
                 });
 
-                message['more'] = {
-                  description: `Weitere Events findest du hier: https://www.meetup.com/de-DE/${community}/events`,
-                  title: `Weitere Events`
-                };
+                message.push(new BrowseCarouselItem({
+                  title: `Weitere Events`,
+                  url: `https://www.meetup.com/de-DE/${community}/events`
+                }));
 
-                const listL = new Carousel({
+                const listL = new BrowseCarousel({
                   items: message
                 });
                 conv.ask(listL);
