@@ -10,7 +10,6 @@ const app = express();
 export class Server {
   public server: http.Server;
   private readonly port: number;
-  private readonly dialogflow: Dialogflow = new Dialogflow();
 
   constructor(port: number) {
     this.port = port;
@@ -24,7 +23,7 @@ export class Server {
       // console.log(`Dialogflow Request headers: ${JSON.stringify(req.headers)}`);
       // console.log(`Dialogflow Request body: ${JSON.stringify(req.body)}`);
       const agent = new WebhookClient({ request: req, response: res });
-      this.dialogflow.handleIntent(agent).then(state => {
+      new Dialogflow().handleIntent(agent).then(state => {
         if (!state) {
           res.sendStatus(500);
         } else {
