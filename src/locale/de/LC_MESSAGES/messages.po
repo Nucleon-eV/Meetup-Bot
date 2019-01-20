@@ -1,0 +1,33 @@
+# Marcel <marcel@radzio-sh.de>, 2019. #zanata
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2019-01-20 04:18+0000\n"
+"Last-Translator: Marcel <marcel@radzio-sh.de>\n"
+"Language-Team: German\n"
+"Language: de\n"
+"X-Generator: Zanata 4.6.2\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+
+#: src/lib/MeetupIntent.ts:91
+msgid "More Events"
+msgstr "Weitere Events"
+
+#: src/lib/MeetupIntent.ts:67
+msgid "No Events happen in this time-period :("
+msgstr "In dem Zeitraum finden leider keine Events statt :("
+
+#: src/lib/MeetupIntent.ts:64
+msgid "No Events happened in this time-period :("
+msgstr "In dem Zeitraum fanden leider keine Events statt :("
+
+#: src/lib/MeetupIntent.ts:75
+msgid "The following events happen:"
+msgstr "Folgende Events finden statt:"
+
+#: src/lib/MeetupIntent.ts:72
+msgid "The following events happened:"
+msgstr "Folgende Events fanden statt:"
+

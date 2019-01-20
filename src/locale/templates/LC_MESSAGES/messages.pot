@@ -1,0 +1,23 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: src/lib/MeetupIntent.ts:91
+msgid "More Events"
+msgstr ""
+
+#: src/lib/MeetupIntent.ts:67
+msgid "No Events happen in this time-period :("
+msgstr ""
+
+#: src/lib/MeetupIntent.ts:64
+msgid "No Events happened in this time-period :("
+msgstr ""
+
+#: src/lib/MeetupIntent.ts:75
+msgid "The following events happen:"
+msgstr ""
+
+#: src/lib/MeetupIntent.ts:72
+msgid "The following events happened:"
+msgstr ""
