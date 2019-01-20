@@ -45,7 +45,7 @@ export class Dialogflow {
       const conv = agent.conv();
 
       console.log(JSON.stringify(agent.originalRequest));
-      const inputs = agent.originalRequest['inputs'] as object[];
+      const inputs = agent.originalRequest['payload']['inputs'] as object[];
       inputs.forEach(element => {
         const args = element["arguments"] as object[];
         args.forEach(argument => {
