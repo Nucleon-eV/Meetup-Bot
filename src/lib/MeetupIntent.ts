@@ -1,10 +1,10 @@
 import { RxHR, RxHttpRequestResponse } from '@akanass/rx-http-request';
 import { BrowseCarousel, BrowseCarouselItem, DialogflowConversation } from 'actions-on-google';
 import { Payload, Text, WebhookClient } from 'dialogflow-fulfillment';
-import { PLATFORMS } from "dialogflow-fulfillment/src/rich-responses/rich-response";
+import { PLATFORMS } from 'dialogflow-fulfillment/src/rich-responses/rich-response';
 import moment from 'moment';
 import { Observable } from 'rxjs';
-import { flatMap } from 'rxjs/operators';
+import { concatMap, flatMap } from 'rxjs/operators';
 import { DateTimeParamters } from './DateTimeParameters';
 import { Event } from './MeetupInterfaces';
 
@@ -15,15 +15,14 @@ export default class MeetupIntent {
   private startDateString: string;
   private endDateString: string;
   private readonly community = `OK-Lab-Schleswig-Flensburg`;
-  private readonly url = `https://api.meetup.com/${this.community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${this.startDateString}&no_later_than=${this.endDateString}&status=past,upcoming,proposed,suggested`;
 
 
   constructor(agent: WebhookClient) {
-    this.agent = agent
+    this.agent = agent;
   }
 
-  public readonly parseTime = (): Observable<void> => {
-    return new Observable(observer => {
+  public readonly parseTime = (): Observable<string> => {
+    return new Observable<string>(observer => {
       const time: DateTimeParamters = this.agent.parameters['date-time'] as DateTimeParamters;
       if (time.startDate !== undefined || time.endDate !== undefined) {
         this.startDate = moment(time.startDate).startOf('day');
@@ -35,25 +34,25 @@ export default class MeetupIntent {
 
       this.startDateString = this.startDate.toISOString().slice(0, -1);
       this.endDateString = this.endDate.toISOString().slice(0, -1);
-      observer.complete()
+
+      observer.next(`https://api.meetup.com/${this.community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${this.startDateString}&no_later_than=${this.endDateString}&status=past,upcoming,proposed,suggested`);
+      observer.complete();
     });
   };
 
   public readonly handleAssistant = (): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
       const req = this.parseTime().pipe(
-        flatMap(() => this.doRequest())
+        concatMap((url: string) => this.doRequest(url))
       );
       const conv = this.agent.conv();
       if (this.ensureCapabilities(conv)) {
         this.agent.add(conv);
-        resolve()
+        resolve();
       }
 
       req.subscribe(
-        data => {
-          console.log(data);
-
+        (data: Event[]) => {
           const message: BrowseCarouselItem[] = [];
           if (data.length === 0) {
 
@@ -90,25 +89,24 @@ export default class MeetupIntent {
             });
             conv.ask(listL);
           }
-          this.agent.add(conv)
+          this.agent.add(conv);
         },
         error => {
           console.error(error);
           reject(error);
         }
-      )
+      );
     });
   };
 
   public readonly handleAny = (): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
       const req = this.parseTime().pipe(
-        flatMap(() => this.doRequest())
+        concatMap((url: string) => this.doRequest(url))
       );
 
       req.subscribe(
-        data => {
-          console.log(data);
+        (data: Event[]) => {
           const message: string[] = [];
           if (data.length === 0) {
             if (this.endDate.isBefore(moment(), 'day')) {
@@ -149,7 +147,7 @@ export default class MeetupIntent {
           console.error(error);
           reject(error);
         }
-      )
+      );
     });
   };
 
@@ -157,19 +155,19 @@ export default class MeetupIntent {
     if (!conv.surface.capabilities.has('actions.capability.SCREEN_OUTPUT')) {
       conv.ask('Entschuldigung, versuche dies auf einem Bildschirm Gerät oder ' +
         'nutze die Handy Oberfläche im Simulator');
-        return true
+      return true;
     }
     if (!conv.surface.capabilities.has('actions.capability.WEB_BROWSER')) {
       conv.ask('Entschuldigung, versuche dies auf einem Gerät mit Browser');
-      return true
+      return true;
     }
-    return false
+    return false;
   };
 
-  private readonly doRequest = (): Observable<Event[]> => {
-    console.log(this.url);
-    return RxHR.get(this.url).pipe(
-      flatMap(data => this.parseData(data)))
+  private readonly doRequest = (url: string): Observable<Event[]> => {
+    return RxHR.get(url).pipe(
+      flatMap(data => this.parseData(data))
+    );
   };
 
   private readonly parseData = (data: RxHttpRequestResponse<any>): Observable<Event[]> => {
@@ -182,11 +180,11 @@ export default class MeetupIntent {
           const event: Event = element as Event;
           events.push(event);
         });
-        observer.next(events)
+        observer.next(events);
       } else {
-        observer.error(new Error("Invalid Data. Status Code not equal 200"))
+        observer.error(new Error('Invalid Data. Status Code not equal 200'));
       }
-      observer.complete()
-    })
-  }
+      observer.complete();
+    });
+  };
 }
