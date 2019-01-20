@@ -71,6 +71,11 @@ export class Dialogflow {
 
             if (platform === 'google') {
               const conv = agent.conv();
+              if (!conv.surface.capabilities.has('actions.capability.SCREEN_OUTPUT')) {
+                conv.ask('Entschuldigung, versuche dies auf einem Bildschirm Gerät oder ' +
+                  'nutze die Handy Oberfläche im Simulator');
+                return;
+              }
               const message: BrowseCarouselItem[] = [];
               if (this.events.length === 0) {
 
