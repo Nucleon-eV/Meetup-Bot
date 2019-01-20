@@ -80,11 +80,15 @@ declare module 'dialogflow-fulfillment' {
   }
 
   export class WebhookClient {
-    public locale: string;
+    public readonly locale: string;
 
-    public parameters: object;
+    public readonly parameters: object;
 
     public readonly requestSource: string;
+
+    public readonly originalRequest: object;
+
+    public readonly query: string;
 
     constructor(options: { request: Request, response: Response } | object);
 

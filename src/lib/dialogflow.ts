@@ -1,5 +1,5 @@
 import { RxHR } from '@akanass/rx-http-request';
-import { Carousel } from 'actions-on-google';
+import { Carousel, LinkOutSuggestion } from 'actions-on-google';
 import { CarouselOptionItem } from 'actions-on-google/src/service/actionssdk/conversation/helper/option/carousel';
 import { OptionItems } from 'actions-on-google/src/service/actionssdk/conversation/helper/option/option';
 import { Payload, Text, WebhookClient } from 'dialogflow-fulfillment';
@@ -9,6 +9,8 @@ import { DateTimeParamters } from './DateTimeParameters';
 import { Event } from './MeetupInterfaces';
 
 export class Dialogflow {
+  private readonly events: Event[] = [];
+
   public readonly handleIntent = (agent: WebhookClient): Promise<boolean> => {
     return new Promise<boolean>((resolve, reject) => {
 
@@ -19,9 +21,10 @@ export class Dialogflow {
       // console.log(`Request locale: ${agent.locale}`);
 
       if (agent.requestSource === PLATFORMS.ACTIONS_ON_GOOGLE) {
-        deIntentMap.set('Welche Termine', (agentL: WebhookClient) => this.meetup(agentL, "google"));
+        deIntentMap.set('Welche Termine', (agentL: WebhookClient) => this.meetup(agentL, 'google'));
+        deIntentMap.set('Selected', this.selected);
       } else {
-        deIntentMap.set('Welche Termine', (agentL: WebhookClient) => this.meetup(agentL, "other"));
+        deIntentMap.set('Welche Termine', (agentL: WebhookClient) => this.meetup(agentL, 'other'));
       }
 
       if (agent.locale === 'de') {
@@ -34,6 +37,33 @@ export class Dialogflow {
       } else {
         resolve(false);
       }
+    });
+  };
+
+  private readonly selected = (agent: WebhookClient): Promise<void> => {
+    return new Promise<void>((resolve) => {
+      const conv = agent.conv();
+
+      const inputs = agent.originalRequest['inputs'] as object[];
+      inputs.forEach(element => {
+        const args = element["arguments"] as object[];
+        args.forEach(argument => {
+          if (argument["name"] === "OPTION") {
+            this.events.forEach(event => {
+              if (event.id === argument["textValue"]) {
+                conv.close(new LinkOutSuggestion({
+                  name: event.name,
+                  url: event.link,
+                }))
+              }
+            })
+          }
+        });
+      });
+
+
+      agent.add(conv);
+      resolve();
     });
   };
 
@@ -63,22 +93,21 @@ export class Dialogflow {
         (data) => {
           if (data.response.statusCode === 200) {
             const json = JSON.parse(data.body);
-            const events: Event[] = [];
 
             json.forEach(element => {
               const event: Event = element as Event;
-              events.push(event);
+              this.events.push(event);
             });
 
-            if (platform === "google") {
+            if (platform === 'google') {
               const conv = agent.conv();
-              const message:  OptionItems<CarouselOptionItem> = {};
-              if (events.length === 0) {
+              const message: OptionItems<CarouselOptionItem> = {};
+              if (this.events.length === 0) {
 
                 if (endDate.isBefore(moment(), 'day')) {
-                  conv.close("In dem Zeitraum fanden leider keine Events statt :(");
+                  conv.close('In dem Zeitraum fanden leider keine Events statt :(');
                 } else {
-                  conv.close("In dem Zeitraum finden leider keine Events statt :(");
+                  conv.close('In dem Zeitraum finden leider keine Events statt :(');
                 }
               } else {
                 if (endDate.isBefore(moment(), 'day')) {
@@ -86,31 +115,31 @@ export class Dialogflow {
                 } else {
                   conv.ask('Folgende Events finden statt:');
                 }
-                events.forEach(element => {
+                this.events.forEach(element => {
                   const dateTime = moment(element.time);
                   dateTime.locale('de');
                   const upperCalendarTime = dateTime.calendar().replace(/^\w/, c => c.toUpperCase());
 
                   message[element.id] = {
                     description: element.link,
-                    title: `${element.name}: ${upperCalendarTime}`,
+                    title: `${element.name}: ${upperCalendarTime}`
                   };
                 });
 
                 message['more'] = {
                   description: `Weitere Events findest du hier: https://www.meetup.com/de-DE/${community}/events`,
-                  title: `Weitere Events`,
+                  title: `Weitere Events`
                 };
-                
+
                 const listL = new Carousel({
                   items: message
                 });
-                conv.close(listL);
+                conv.ask(listL);
               }
               agent.add(conv);
             } else {
               const message: string[] = [];
-              if (events.length === 0) {
+              if (this.events.length === 0) {
                 if (endDate.isBefore(moment(), 'day')) {
                   message.push('In dem Zeitraum fanden leider keine Events statt :(');
                 } else {
@@ -125,7 +154,7 @@ export class Dialogflow {
                 }
                 message.push('');
 
-                events.forEach(element => {
+                this.events.forEach(element => {
                   const dateTime = moment(element.time);
                   dateTime.locale('de');
                   const upperCalendarTime = dateTime.calendar().replace(/^\w/, c => c.toUpperCase());
@@ -143,7 +172,7 @@ export class Dialogflow {
               agent.add(payloadTg);
             }
 
-            const payloadNull = new Text("Unsupported Platform");
+            const payloadNull = new Text('Unsupported Platform');
             agent.add(payloadNull);
             resolve();
           } else {
