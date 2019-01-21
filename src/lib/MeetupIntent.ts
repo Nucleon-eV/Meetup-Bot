@@ -103,7 +103,7 @@ export default class MeetupIntent {
             conv.ask(listL);
           }
           this.agent.add(conv);
-          resolve()
+          resolve();
         },
         error => {
           console.error(error);
@@ -151,6 +151,13 @@ export default class MeetupIntent {
           const payloadTg = new Payload(PLATFORMS.TELEGRAM, {
             parse_mode: 'Markdown',
             text: message.join('\n')
+          });
+          this.agent.setContext({
+            lifespan: 2,
+            name: 'WelcheTermine-followup',
+            parameters: {
+              'community': this.community
+            }
           });
           this.agent.add(payloadTg);
           const payloadNull = new Text('Unsupported Platform');
