@@ -154,7 +154,7 @@ export default class MeetupIntent {
           });
           this.agent.setContext({
             lifespan: 2,
-            name: 'WelcheTermine-followup',
+            name: 'welchetermine-followup',
             parameters: {
               'community': this.community
             }
