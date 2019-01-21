@@ -37,6 +37,8 @@ export default class MeetupIntent {
 
       this.startDateString = this.startDate.toISOString().slice(0, -1);
       this.endDateString = this.endDate.toISOString().slice(0, -1);
+      console.log(this.startDateString);
+      console.log(this.endDateString);
 
       observer.next(`https://api.meetup.com/${this.community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${this.startDateString}&no_later_than=${this.endDateString}&status=past,upcoming,proposed,suggested`);
       observer.complete();
@@ -49,6 +51,8 @@ export default class MeetupIntent {
         concatMap((url: string) => this.doRequest(url))
       );
       const conv = this.agent.conv();
+      // TODO make it audio only device ready
+
       if (this.ensureCapabilities(conv)) {
         this.agent.add(conv);
         resolve();

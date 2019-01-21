@@ -20,7 +20,6 @@ test.afterEach(t => {
 });
 
 test("ask for tomorrows meetups", async t => {
-  // fixme correct body
   t.plan(1);
   const res = await request(t.context['server'].server)
     .post('/')
