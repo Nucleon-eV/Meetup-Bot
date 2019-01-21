@@ -37,8 +37,6 @@ export default class MeetupIntent {
 
       this.startDateString = this.startDate.toISOString().slice(0, -1);
       this.endDateString = this.endDate.toISOString().slice(0, -1);
-      console.log(this.startDateString);
-      console.log(this.endDateString);
 
       observer.next(`https://api.meetup.com/${this.community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${this.startDateString}&no_later_than=${this.endDateString}&status=past,upcoming,proposed,suggested`);
       observer.complete();
@@ -177,6 +175,7 @@ export default class MeetupIntent {
   };
 
   private readonly doRequest = (url: string): Observable<Event[]> => {
+    console.log(url)
     return RxHR.get(url).pipe(
       flatMap(data => this.parseData(data))
     );
@@ -187,6 +186,7 @@ export default class MeetupIntent {
       const events: Event[] = [];
       if (data.response.statusCode === 200) {
         const json = JSON.parse(data.body);
+        console.log(json)
 
         json.forEach(element => {
           const event: Event = element as Event;
