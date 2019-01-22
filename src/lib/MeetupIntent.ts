@@ -27,11 +27,11 @@ export default class MeetupIntent {
 
   public readonly parseTime = (): Observable<string> => {
     return new Observable<string>(observer => {
-      console.log(this.agent.parameters);
+      console.log(`RAW: ${this.agent.parameters}`);
       const time: DateTimeParamters = this.agent.parameters['date-time'] as DateTimeParamters;
-      console.log(time.startDate);
-      console.log(time.endDate);
-      console.log(time['date-time']);
+      console.log(`StartDate: ${time.startDate}`);
+      console.log(`endDate: ${time.endDate}`);
+      console.log(`date-time: ${time['date-time']}`);
       if (time.startDate !== undefined && time.endDate !== undefined) {
         this.startDate = moment(time.startDate).startOf('day');
         this.endDate = moment(time.endDate).endOf('day');
