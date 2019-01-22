@@ -6,6 +6,7 @@ import { Request } from 'express';
 import moment from 'moment';
 import { Observable } from 'rxjs';
 import { concatMap, flatMap } from 'rxjs/operators';
+import { ConfigJson, getConfig } from './config';
 import { DateTimeParamters } from './DateTimeParameters';
 import { Event } from './MeetupInterfaces';
 
@@ -15,8 +16,8 @@ export default class MeetupIntent {
   private endDate: moment.Moment;
   private startDateString: string;
   private endDateString: string;
-  private readonly community = `OK-Lab-Schleswig-Flensburg`;
   private readonly request: Request;
+  private readonly config: ConfigJson = getConfig();
 
 
   constructor(agent: WebhookClient, req: Request) {
@@ -38,10 +39,11 @@ export default class MeetupIntent {
       this.startDateString = this.startDate.toISOString().slice(0, -1);
       this.endDateString = this.endDate.toISOString().slice(0, -1);
 
+      const baseURL = `https://api.meetup.com/${this.config.community}/events?key=${this.config.api_key}&sign=true&photo-host=public&no_earlier_than=${this.startDateString}&no_later_than=${this.endDateString}&status=past,upcoming,proposed,suggested`;
       if (this.endDate.isBefore(moment(), 'day')) {
-        observer.next(`https://api.meetup.com/${this.community}/events?&sign=true&photo-host=public&has_ended=true&no_earlier_than=${this.startDateString}&no_later_than=${this.endDateString}&status=past,upcoming,proposed,suggested`);
+        observer.next(`${baseURL}&has_ended=true`);
       } else {
-        observer.next(`https://api.meetup.com/${this.community}/events?&sign=true&photo-host=public&no_earlier_than=${this.startDateString}&no_later_than=${this.endDateString}&status=past,upcoming,proposed,suggested`);
+        observer.next(baseURL);
       }
       observer.complete();
     });
@@ -94,7 +96,7 @@ export default class MeetupIntent {
             message.push(new BrowseCarouselItem({
               // @ts-ignore
               title: this.request.gettext(`More Events`),
-              url: `https://www.meetup.com/de-DE/${this.community}/events`
+              url: `https://www.meetup.com/de-DE/${this.config.community}/events`
             }));
 
             const listL = new BrowseCarousel({
@@ -147,16 +149,16 @@ export default class MeetupIntent {
           }
 
           message.push('');
-          message.push(`Weitere Events findest du hier: https://www.meetup.com/de-DE/${this.community}/events`);
+          message.push(`Weitere Events findest du hier: https://www.meetup.com/de-DE/${this.config.community}/events`);
           const payloadTg = new Payload(PLATFORMS.TELEGRAM, {
             parse_mode: 'Markdown',
             text: message.join('\n')
           });
           this.agent.setContext({
             lifespan: 2,
-            name: 'welchetermine-followup',
+            name: 'WelcheTermine-followup',
             parameters: {
-              'community': this.community
+              'community': this.config.community
             }
           });
           this.agent.add(payloadTg);
