@@ -57,6 +57,7 @@ export default class MeetupIntent {
           return this.parseTime();
         }),
         concatMap((url: string) => {
+          console.log(url)
           return this.doRequest(url);
         })
       );
