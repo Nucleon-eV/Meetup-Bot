@@ -1,5 +1,8 @@
 export interface DateTimeParamters {
-  'date-time'?: string;
+  'date-time'?: string | {
+    startDate: string;
+    endDate: string;
+  };
   startDate?: string;
   endDate?: string;
 }

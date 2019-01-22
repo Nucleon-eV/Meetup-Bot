@@ -32,12 +32,16 @@ export default class MeetupIntent {
       console.log(`StartDate: ${time.startDate}`);
       console.log(`endDate: ${time.endDate}`);
       console.log(`date-time: ${time['date-time']}`);
+      console.log(`date-time-type: ${typeof time['date-time']}`);
       if (time.startDate !== undefined && time.endDate !== undefined) {
         this.startDate = moment(time.startDate).startOf('day');
         this.endDate = moment(time.endDate).endOf('day');
+      } else if (typeof time['date-time'] === 'object' && time['date-time'].startDate !== undefined && time['date-time'].endDate !== undefined) {
+        this.startDate = moment(time['date-time'].startDate).startOf('day');
+        this.endDate = moment(time['date-time'].endDate).endOf('day');
       } else if (time['date-time'] !== undefined) {
-        this.startDate = moment(time['date-time']).startOf('day');
-        this.endDate = moment(time['date-time']).endOf('day');
+        this.startDate = moment(time['date-time'].toString()).startOf('day');
+        this.endDate = moment(time['date-time'].toString()).endOf('day');
       }
 
       this.startDateString = this.startDate.toISOString().slice(0, -1);
