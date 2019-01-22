@@ -28,7 +28,10 @@ export default class MeetupIntent {
   public readonly parseTime = (): Observable<string> => {
     return new Observable<string>(observer => {
       const time: DateTimeParamters = this.agent.parameters['date-time'] as DateTimeParamters;
-      if (time.startDate !== undefined || time.endDate !== undefined) {
+      console.log(time.startDate);
+      console.log(time.endDate);
+      console.log(time['date-time']);
+      if (time.startDate !== undefined && time.endDate !== undefined) {
         this.startDate = moment(time.startDate).startOf('day');
         this.endDate = moment(time.endDate).endOf('day');
       } else if (time['date-time'] !== undefined) {
@@ -57,7 +60,7 @@ export default class MeetupIntent {
           return this.parseTime();
         }),
         concatMap((url: string) => {
-          console.log(url)
+          console.log(url);
           return this.doRequest(url);
         })
       );
