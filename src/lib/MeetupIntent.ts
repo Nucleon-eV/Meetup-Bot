@@ -27,7 +27,7 @@ export default class MeetupIntent {
 
   public readonly parseTime = (): Observable<string> => {
     return new Observable<string>(observer => {
-      console.log(`RAW: ${this.agent.parameters}`);
+      console.log(`RAW: ${JSON.stringify(this.agent.parameters)}`);
       const time: DateTimeParamters = this.agent.parameters['date-time'] as DateTimeParamters;
       console.log(`StartDate: ${time.startDate}`);
       console.log(`endDate: ${time.endDate}`);
