@@ -17,7 +17,7 @@ export default class MeetupIntent {
   private startDateString: string;
   private endDateString: string;
   private readonly request: Request;
-  private readonly config: ConfigJson = getConfig();
+  private config: ConfigJson;
 
 
   constructor(agent: WebhookClient, req: Request) {
@@ -51,9 +51,16 @@ export default class MeetupIntent {
 
   public readonly handleAssistant = (): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
-      const req = this.parseTime().pipe(
-        concatMap((url: string) => this.doRequest(url))
+      const req = getConfig().pipe(
+        concatMap((config: ConfigJson) => {
+          this.config = config;
+          return this.parseTime();
+        }),
+        concatMap((url: string) => {
+          return this.doRequest(url);
+        })
       );
+
       const conv = this.agent.conv();
       // TODO make it audio only device ready
 
@@ -117,8 +124,14 @@ export default class MeetupIntent {
 
   public readonly handleAny = (): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
-      const req = this.parseTime().pipe(
-        concatMap((url: string) => this.doRequest(url))
+      const req = getConfig().pipe(
+        concatMap((config: ConfigJson) => {
+          this.config = config;
+          return this.parseTime();
+        }),
+        concatMap((url: string) => {
+          return this.doRequest(url);
+        })
       );
 
       req.subscribe(
